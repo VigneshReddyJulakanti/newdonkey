@@ -1,86 +1,78 @@
-import React, { Component } from "react";
+import React from "react";
 import Newsitem from "./Newsitem.js";
 import Spinner from "./Spinner.js";
 import PropTypes from "prop-types";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { useState,useEffect } from "react";
 
-export default class News extends Component {
-  static defaultProps = {
-    country: "in",
-    category: "business",
-    pageSize: 0,
-  };
-  static propTypes = {
-    country: PropTypes.string,
-    category: PropTypes.string,
-  };
+const News=(props)=> {
+ 
 
-  capit = (str) => {
+  
+
+
+  const capit = (str) => {
     return str[0].toUpperCase() + str.slice(1);
   };
 
-  constructor(props) {
-    super(props);
-    this.state = {
-      article: [],
-      loading: true,
-      page: 0,
-      tno: 0,
-    };
-    document.title = `${this.capit(this.props.category)} - NewsDonkey`;
-  }
+  const [article, setarticle] = useState([]);
+  const [loading, setloading] = useState(true);
+  const [page, setpage] = useState(0);
+  const [tno, settno] = useState(0)
 
-  LoadDAta = async () => {
-    // console.log("article length" , this.state.article.length)
-    // console.log("tno" , this.state.tno)
-    // console.log("pageSize" , this.props.pageSize)
+  
 
-    // console.log(this.state.article.length <= (this.state.tno - this.props.pageSize))
+ 
 
-    await this.setState({
-      page: this.state.page + 1,
-    });
+  const LoadDAta = async () => {
 
-    // console.log(this.state.page)
 
-    this.props.setProgress(30);
-    let url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.api_key}&page=${this.state.page}&pageSize=${this.props.pageSize}`;
+
+    
+
+    props.setProgress(30);
+    let url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.api_key}&page=${page+1}&pageSize=${props.pageSize}`;
+    setpage(page+1);
     let data = await fetch(url);
     let ParsedData = await data.json();
-    this.props.setProgress(90);
-    this.setState({
-      article: this.state.article.concat(ParsedData.articles),
-      tno: ParsedData.totalResults,
-      loading: false,
-    });
-    this.props.setProgress(100);
+    props.setProgress(90);
+
+    setarticle(article.concat(ParsedData.articles));
+    settno(ParsedData.totalResults);
+    setloading(false);
+    props.setProgress(100);
+    
+    
   };
 
-  async componentDidMount() {
-    this.LoadDAta();
-  }
+  useEffect(() => {
+    LoadDAta();
+     document.title = `${capit(props.category)} - NewsDonkey`;
+   
+  }, [])
 
-  render() {
+
+ 
     return (
       <div>
         <div className="container my-3">
           <span>
             <h1 id="top_headlines" style={{ margin: "25px 0px" }}>
-              Top {this.capit(this.props.category)} HeadLines
+              Top {capit(props.category)} HeadLines
             </h1>
           </span>
-          <span>{this.state.tno} articles found</span>
+          <span>{tno} articles found</span>
 
-          {this.state.loading && <Spinner />}
+          {loading && <Spinner />}
 
           <InfiniteScroll
-            dataLength={this.state.article.length}
-            next={this.LoadDAta}
-            hasMore={this.state.article.length < this.state.tno}
+            dataLength={article.length}
+            next={LoadDAta}
+            hasMore={article.length < tno }
             loader={<Spinner />}
           >
             <div className="row">
-              {this.state.article.map((element) => {
+              {article.map((element) => {
                 return (
                   <div className="col-md-4" key={element.url}>
                     <Newsitem
@@ -99,5 +91,17 @@ export default class News extends Component {
         </div>
       </div>
     );
-  }
+  
 }
+
+News.defaultProps ={
+  country: "in",
+  category: "business",
+  pageSize: 0
+};
+News.propTypes = {
+  country: PropTypes.string,
+  category: PropTypes.string,
+};
+
+export default News;
